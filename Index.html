@@ -1,0 +1,114 @@
+`html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recorrido de Papá Noel - Sierra Grande</title>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+  body { margin: 0; padding: 0; }
+
+map { width: 100vw; height: 100vh; }
+
+  / Estética navideña /
+  .leaflet-popup-content-wrapper {
+    background: #fff5f5;
+    border: 2px solid #d62828;
+    border-radius: 10px;
+  }
+  .leaflet-popup-tip {
+    background: #d62828;
+  }
+</style>
+</head>
+
+<body>
+<div id="map"></div>
+
+<script>
+// Crear mapa centrado en Sierra Grande
+var map = L.map('map').setView([-41.606, -65.355], 14);
+
+// Capa base
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
+
+// Ícono de Papá Noel
+var santaIcon = L.icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/1046/1046899.png",
+  iconSize: [50, 50],
+  iconAnchor: [25, 25]
+});
+
+// Marcador móvil de Papá Noel
+var santaMarker = L.marker([-41.606, -65.355], { icon: santaIcon }).addTo(map);
+
+// URL de Glympse
+var glympseURL = "https://glympse.com/Bc5p-70aX";
+
+// Función para obtener ubicación en vivo desde Glympse
+async function actualizarPosicion() {
+  try {
+    let response = await fetch(glympseURL);
+    let text = await response.text();
+
+    // Buscar coordenadas dentro del HTML de Glympse
+    let latMatch = text.match(/"lat":([\-0-9.]+)/);
+    let lngMatch = text.match(/"lng":([\-0-9.]+)/);
+
+    if (latMatch && lngMatch) {
+      let lat = parseFloat(latMatch[1]);
+      let lng = parseFloat(lngMatch[1]);
+
+      santaMarker.setLatLng([lat, lng]);
+    }
+  } catch (e) {
+    console.log("No se pudo actualizar la ubicación");
+  }
+}
+
+// Actualizar cada 10 segundos
+setInterval(actualizarPosicion, 10000);
+
+// Recorrido (línea general por barrios)
+var recorrido = [
+  [-41.604, -65.360], // Bomberos
+  [-41.600, -65.365], // Industrial
+  [-41.606, -65.355], // Centro
+  [-41.610, -65.350], // La Villa
+  [-41.612, -65.345], // 9 de Julio
+  [-41.608, -65.340], // 25 de Mayo
+  [-41.603, -65.338], // La Loma
+  [-41.605, -65.352]  // Plaza San Martín
+];
+
+L.polyline(recorrido, { color: "red", weight: 5 }).addTo(map);
+
+// Marcadores de barrios
+var paradas = [
+  { coords: [-41.604, -65.360], nombre: "Salida: Bomberos" },
+  { coords: [-41.600, -65.365], nombre: "Barrio Industrial" },
+  { coords: [-41.606, -65.355], nombre: "Barrio Centro" },
+  { coords: [-41.610, -65.350], nombre: "Barrio La Villa" },
+  { coords: [-41.612, -65.345], nombre: "Barrio 9 de Julio" },
+  { coords: [-41.608, -65.340], nombre: "Barrio 25 de Mayo" },
+  { coords: [-41.603, -65.338], nombre: "Barrio La Loma" },
+  { coords: [-41.605, -65.352], nombre: "Llegada: Plaza San Martín" }
+];
+
+paradas.forEach(p => {
+  L.marker(p.coords).addTo(map).bindPopup("<b>" + p.nombre + "</b><br>🎅 Papá Noel pasará por aquí");
+});
+</script>
+
+</body>
+</html>
+`
+
+---
